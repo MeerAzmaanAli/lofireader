@@ -17,6 +17,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextPageBtn = document.getElementById('next-page');
     const pageInfo = document.getElementById('page-info');
 
+    // Create loading spinner
+    const loadingSpinner = document.createElement('div');
+    loadingSpinner.className = 'loading-spinner';
+    loadingSpinner.innerHTML = `
+        <div class="spinner"></div>
+    `;
+    backgroundGif.parentElement.appendChild(loadingSpinner);
+    loadingSpinner.style.display = 'none';
+
     // PDF state
     let currentPdf = null;
     let currentPage = 1;
@@ -222,7 +231,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleBackgroundChange() {
         const selectedBg = backgroundSelect.value;
         const encodedBg = encodeURIComponent(selectedBg);
-        backgroundGif.src = `assets/gif/${encodedBg}`;
+        
+        // Show loading spinner
+        loadingSpinner.style.display = 'flex';
+        
+        // Create a new image to preload
+        const tempImage = new Image();
+        tempImage.onload = () => {
+            backgroundGif.src = `assets/gif/${encodedBg}`;
+            loadingSpinner.style.display = 'none';
+        };
+        tempImage.onerror = () => {
+            console.error('Failed to load background image');
+            loadingSpinner.style.display = 'none';
+        };
+        tempImage.src = `assets/gif/${encodedBg}`;
     }
 
     // Initialize volume
