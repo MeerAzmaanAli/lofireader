@@ -49,6 +49,8 @@ document.addEventListener('DOMContentLoaded', () => {
             requestAnimationFrame(() => {
                 uploadSection.style.opacity = '1';
             });
+            // Reset file input to allow selecting the same file again
+            fileInput.value = '';
         }, 300);
     });
     fileInput.addEventListener('change', handleFileSelect);
