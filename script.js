@@ -19,12 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const pageInfo = document.getElementById('page-info');
 
     // Create loading spinners
-    const bgLoadingSpinner = document.createElement('div');
-    bgLoadingSpinner.className = 'loading-spinner bg-loading';
-    bgLoadingSpinner.innerHTML = `
-        <div class="spinner"></div>
-    `;
-    backgroundGif.parentElement.appendChild(bgLoadingSpinner);
+    const bgLoadingSpinner = document.querySelector('.bg-loading');
     bgLoadingSpinner.style.display = 'none';
 
     const audioLoadingSpinner = document.createElement('div');
