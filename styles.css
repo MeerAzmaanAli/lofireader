@@ -365,9 +365,9 @@ body {
 }
 
 .loading-spinner.bg-loading {
-    bottom: 2rem;
-    left: 2rem;
-    margin-left: 150px;
+    bottom: 2.5rem;
+    left: 6rem;
+    margin-left: 200px;
 }
 
 .loading-spinner.audio-loading {
