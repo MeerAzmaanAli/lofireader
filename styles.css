@@ -261,7 +261,7 @@ body {
 
     .reader-container {
         padding: 1.5rem;
-        margin-bottom: 5rem; /* Add space for controls */
+        margin-bottom: 5rem;
     }
 
     .upload-section h1 {
@@ -272,6 +272,10 @@ body {
         bottom: 1rem;
         right: 1rem;
         padding: 0.4rem 0.6rem;
+    }
+
+    .volume-control {
+        display: none;
     }
 
     .background-controls {
@@ -295,7 +299,7 @@ body {
     .loading-spinner.audio-loading {
         bottom: 1.3rem;
         right: 1rem;
-        margin-right: 100px;
+        margin-right: 0;
     }
 }
 
