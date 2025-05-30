@@ -2,6 +2,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // DOM Elements
     const fileInput = document.getElementById('file-input');
     const uploadBtn = document.getElementById('upload-btn');
+    const newUploadBtn = document.getElementById('new-upload-btn');
     const uploadArea = document.getElementById('upload-area');
     const uploadSection = document.getElementById('upload-section');
     const textContainer = document.getElementById('text-container');
@@ -44,6 +45,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Listeners
     uploadBtn.addEventListener('click', () => fileInput.click());
+    newUploadBtn.addEventListener('click', () => {
+        // Show upload section with animation
+        textContainer.style.opacity = '0';
+        setTimeout(() => {
+            textContainer.hidden = true;
+            uploadSection.style.display = 'block';
+            requestAnimationFrame(() => {
+                uploadSection.style.opacity = '1';
+            });
+        }, 300);
+    });
     fileInput.addEventListener('change', handleFileSelect);
     uploadArea.addEventListener('dragover', handleDragOver);
     uploadArea.addEventListener('drop', handleDrop);
