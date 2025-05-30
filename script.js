@@ -17,14 +17,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const nextPageBtn = document.getElementById('next-page');
     const pageInfo = document.getElementById('page-info');
 
-    // Create loading spinner
-    const loadingSpinner = document.createElement('div');
-    loadingSpinner.className = 'loading-spinner';
-    loadingSpinner.innerHTML = `
+    // Create loading spinners
+    const bgLoadingSpinner = document.createElement('div');
+    bgLoadingSpinner.className = 'loading-spinner bg-loading';
+    bgLoadingSpinner.innerHTML = `
         <div class="spinner"></div>
     `;
-    backgroundGif.parentElement.appendChild(loadingSpinner);
-    loadingSpinner.style.display = 'none';
+    backgroundGif.parentElement.appendChild(bgLoadingSpinner);
+    bgLoadingSpinner.style.display = 'none';
+
+    const audioLoadingSpinner = document.createElement('div');
+    audioLoadingSpinner.className = 'loading-spinner audio-loading';
+    audioLoadingSpinner.innerHTML = `
+        <div class="spinner"></div>
+    `;
+    document.querySelector('.audio-controls').appendChild(audioLoadingSpinner);
+    audioLoadingSpinner.style.display = 'none';
 
     // PDF state
     let currentPdf = null;
@@ -219,12 +227,25 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentTime = backgroundMusic.currentTime;
         const wasPlaying = isPlaying;
         
-        backgroundMusic.src = `assets/music/${musicSelect.value}`;
-        backgroundMusic.currentTime = currentTime;
+        // Show audio loading spinner
+        audioLoadingSpinner.style.display = 'flex';
         
-        if (wasPlaying) {
-            backgroundMusic.play();
-        }
+        // Create a new audio element to preload
+        const tempAudio = new Audio();
+        tempAudio.oncanplaythrough = () => {
+            backgroundMusic.src = `assets/music/${musicSelect.value}`;
+            backgroundMusic.currentTime = currentTime;
+            
+            if (wasPlaying) {
+                backgroundMusic.play();
+            }
+            audioLoadingSpinner.style.display = 'none';
+        };
+        tempAudio.onerror = () => {
+            console.error('Failed to load audio file');
+            audioLoadingSpinner.style.display = 'none';
+        };
+        tempAudio.src = `assets/music/${musicSelect.value}`;
     }
 
     // Handle background change
@@ -233,17 +254,17 @@ document.addEventListener('DOMContentLoaded', () => {
         const encodedBg = encodeURIComponent(selectedBg);
         
         // Show loading spinner
-        loadingSpinner.style.display = 'flex';
+        bgLoadingSpinner.style.display = 'flex';
         
         // Create a new image to preload
         const tempImage = new Image();
         tempImage.onload = () => {
             backgroundGif.src = `assets/gif/${encodedBg}`;
-            loadingSpinner.style.display = 'none';
+            bgLoadingSpinner.style.display = 'none';
         };
         tempImage.onerror = () => {
             console.error('Failed to load background image');
-            loadingSpinner.style.display = 'none';
+            bgLoadingSpinner.style.display = 'none';
         };
         tempImage.src = `assets/gif/${encodedBg}`;
     }

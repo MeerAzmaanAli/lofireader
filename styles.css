@@ -256,10 +256,16 @@ body {
         padding: 0.4rem 0.6rem;
     }
 
-    .loading-spinner {
+    .loading-spinner.bg-loading {
         bottom: 1.3rem;
         left: 1rem;
-        margin-left: 100px; /* Adjust for mobile */
+        margin-left: 100px;
+    }
+
+    .loading-spinner.audio-loading {
+        bottom: 1.3rem;
+        right: 1rem;
+        margin-right: 100px;
     }
 }
 
@@ -322,13 +328,22 @@ body {
 
 .loading-spinner {
     position: fixed;
-    bottom: 2rem;
-    left: 2rem;
     display: flex;
     justify-content: center;
     align-items: center;
     z-index: 1000;
-    margin-left: 150px; /* Position it to the right of background controls */
+}
+
+.loading-spinner.bg-loading {
+    bottom: 2rem;
+    left: 2rem;
+    margin-left: 150px;
+}
+
+.loading-spinner.audio-loading {
+    bottom: 0.5rem;
+    right: 5rem;
+    margin-right: 150px;
 }
 
 .spinner {
