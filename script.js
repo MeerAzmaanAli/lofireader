@@ -106,7 +106,18 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const content = e.target.result;
-            displayContent(content);
+            // Convert markdown-like formatting to HTML
+            const formattedContent = content
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
+                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
+                .replace(/^# (.*$)/gm, '<h1>$1</h1>') // H1
+                .replace(/^## (.*$)/gm, '<h2>$1</h2>') // H2
+                .replace(/^### (.*$)/gm, '<h3>$1</h3>') // H3
+                .replace(/^- (.*$)/gm, '<li>$1</li>') // List items
+                .replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>') // Wrap list items in ul
+                .replace(/\n\n/g, '<br><br>'); // Paragraphs
+            
+            displayContent(formattedContent);
             pdfControls.hidden = true;
             // Start playing music when user interacts
             if (!isPlaying) {
@@ -122,48 +133,18 @@ document.addEventListener('DOMContentLoaded', () => {
     async function readWordFile(file) {
         try {
             const arrayBuffer = await file.arrayBuffer();
-            // Use raw text conversion instead of HTML
-            const result = await mammoth.extractRawText({ arrayBuffer });
+            // Convert to HTML instead of raw text
+            const result = await mammoth.convertToHtml({ arrayBuffer });
             let content = result.value;
             
-            // Process the content to preserve formatting
-            let formattedText = '';
+            // Add some basic styling to the HTML content
+            content = `
+                <div class="formatted-content">
+                    ${content}
+                </div>
+            `;
             
-            // Split content into lines and process each line
-            const lines = content.split('\n');
-            let inList = false;
-            
-            for (let line of lines) {
-                line = line.trim();
-                
-                // Skip empty lines
-                if (!line) {
-                    if (formattedText) formattedText += '\n';
-                    continue;
-                }
-                
-                // Check for bullet points and list markers
-                if (line.match(/^[•\-\*○▪\d+\.]\s/) || line.match(/^\d+\)\s/)) {
-                    if (!inList && formattedText) formattedText += '\n';
-                    inList = true;
-                    formattedText += line + '\n';
-                } else {
-                    if (inList) {
-                        formattedText += '\n';
-                        inList = false;
-                    }
-                    if (formattedText) formattedText += '\n';
-                    formattedText += line;
-                }
-            }
-            
-            // Clean up formatting
-            formattedText = formattedText
-                .replace(/\n{3,}/g, '\n\n')  // Replace 3 or more newlines with 2
-                .replace(/\n\s*\n/g, '\n\n')  // Remove spaces between newlines
-                .trim();  // Remove leading/trailing whitespace
-            
-            displayContent(formattedText);
+            displayContent(content);
             
             // Start playing music when user interacts
             if (!isPlaying) {
@@ -183,7 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
             uploadSection.style.display = 'none';
             textContainer.hidden = false;
-            textContent.textContent = content;
+            textContent.innerHTML = content; // Changed from textContent to innerHTML
             textContainer.style.opacity = '0';
             requestAnimationFrame(() => {
                 textContainer.style.opacity = '1';
