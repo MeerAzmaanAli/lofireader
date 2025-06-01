@@ -106,18 +106,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const reader = new FileReader();
         reader.onload = (e) => {
             const content = e.target.result;
-            // Convert markdown-like formatting to HTML
+            // Convert markdown-like formatting to HTML with whitespace and font size support
             const formattedContent = content
-                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') // Bold
-                .replace(/\*(.*?)\*/g, '<em>$1</em>') // Italic
-                .replace(/^# (.*$)/gm, '<h1>$1</h1>') // H1
-                .replace(/^## (.*$)/gm, '<h2>$1</h2>') // H2
-                .replace(/^### (.*$)/gm, '<h3>$1</h3>') // H3
-                .replace(/^- (.*$)/gm, '<li>$1</li>') // List items
-                .replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>') // Wrap list items in ul
-                .replace(/\n\n/g, '<br><br>'); // Paragraphs
+                // Preserve multiple spaces
+                .replace(/  +/g, match => '&nbsp;'.repeat(match.length))
+                // Font size syntax: [size:20]text[/size] - with !important to override any other styles
+                .replace(/\[size:(\d+)\](.*?)\[\/size\]/g, '<span style="font-size: $1px !important; display: inline-block;">$2</span>')
+                // Bold
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                // Italic
+                .replace(/\*(.*?)\*/g, '<em>$1</em>')
+                // Headings with specific font sizes
+                .replace(/^# (.*$)/gm, '<h1 style="font-size: 32px !important;">$1</h1>')
+                .replace(/^## (.*$)/gm, '<h2 style="font-size: 24px !important;">$1</h2>')
+                .replace(/^### (.*$)/gm, '<h3 style="font-size: 20px !important;">$1</h3>')
+                // List items
+                .replace(/^- (.*$)/gm, '<li>$1</li>')
+                .replace(/(<li>.*<\/li>)/g, '<ul>$1</ul>')
+                // Preserve line breaks with increased spacing
+                .replace(/\n/g, '<br><br>')
+                // Preserve indentation (4 spaces or tab)
+                .replace(/^(\s{4}|\t)(.*$)/gm, '<div style="margin-left: 2em">$2</div>');
             
-            displayContent(formattedContent);
+            // Wrap content in a div with increased line height and base font size
+            const wrappedContent = `
+                <div style="line-height: 1.8; letter-spacing: 0.3px;paragraph-spacing: 5px; font-size: 16px;">
+                    ${formattedContent}
+                </div>
+            `;
+            
+            displayContent(wrappedContent);
             pdfControls.hidden = true;
             // Start playing music when user interacts
             if (!isPlaying) {
@@ -133,15 +151,102 @@ document.addEventListener('DOMContentLoaded', () => {
     async function readWordFile(file) {
         try {
             const arrayBuffer = await file.arrayBuffer();
-            // Convert to HTML instead of raw text
-            const result = await mammoth.convertToHtml({ arrayBuffer });
+            // Convert to HTML with custom options to preserve formatting
+            const result = await mammoth.convertToHtml({ 
+                arrayBuffer,
+                transformDocument: (element) => {
+                    // Handle different types of elements
+                    if (element.type === "run") {
+                        // Handle text runs with their formatting
+                        if (element.styleId) {
+                            // Get the style name from the style ID
+                            const styleName = element.styleId.toLowerCase();
+                            
+                            // Handle different style types
+                            if (styleName.includes('heading')) {
+                                // Handle headings
+                                if (styleName.includes('1')) {
+                                    element.style.fontSize = '32px';
+                                } else if (styleName.includes('2')) {
+                                    element.style.fontSize = '24px';
+                                } else if (styleName.includes('3')) {
+                                    element.style.fontSize = '20px';
+                                }
+                            } else {
+                                // Handle normal text with size
+                                const sizeMatch = styleName.match(/size(\d+)/);
+                                if (sizeMatch) {
+                                    element.style.fontSize = `${sizeMatch[1]}px`;
+                                }
+                            }
+                        }
+
+                        // Handle direct formatting
+                        if (element.fontSize) {
+                            // Convert Word's font size (in half-points) to pixels
+                            const sizeInPixels = Math.round(element.fontSize / 2);
+                            element.style.fontSize = `${sizeInPixels}px`;
+                        }
+
+                        // Handle bold and italic
+                        if (element.bold) {
+                            element.style.fontWeight = 'bold';
+                        }
+                        if (element.italic) {
+                            element.style.fontStyle = 'italic';
+                        }
+                    }
+
+                    // Handle paragraphs
+                    if (element.type === "paragraph") {
+                        if (element.styleId) {
+                            const styleName = element.styleId.toLowerCase();
+                            if (styleName.includes('heading')) {
+                                if (styleName.includes('1')) {
+                                    element.style.fontSize = '32px';
+                                } else if (styleName.includes('2')) {
+                                    element.style.fontSize = '24px';
+                                } else if (styleName.includes('3')) {
+                                    element.style.fontSize = '20px';
+                                }
+                            }
+                        }
+                    }
+
+                    return element;
+                },
+                styleMap: [
+                    "p[style-name='Normal'] => p",
+                    "p[style-name='Heading 1'] => h1",
+                    "p[style-name='Heading 2'] => h2",
+                    "p[style-name='Heading 3'] => h3",
+                    "r[style-name='Strong'] => strong",
+                    "r[style-name='Emphasis'] => em"
+                ]
+            });
+            
             let content = result.value;
             
-            // Add some basic styling to the HTML content
+            // Add styling wrapper with increased line spacing and base font size
             content = `
-                <div class="formatted-content">
+                <div class="formatted-content" style="white-space: pre-wrap; line-height: 1.8; letter-spacing: 0.3px; font-size: 16px;">
                     ${content}
                 </div>
+            `;
+            
+            // Add a style block to ensure font sizes are preserved
+            content = `
+                <style>
+                    .formatted-content * {
+                        font-size: inherit;
+                    }
+                    .formatted-content h1 { font-size: 32px !important; }
+                    .formatted-content h2 { font-size: 24px !important; }
+                    .formatted-content h3 { font-size: 20px !important; }
+                    .formatted-content p { font-size: 16px !important; }
+                    .formatted-content span { display: inline-block; }
+                </style>
+                ${content}
             `;
             
             displayContent(content);
